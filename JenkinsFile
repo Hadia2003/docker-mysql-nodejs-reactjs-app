@@ -1,0 +1,44 @@
+pipeline {
+    agent any
+
+    environment {
+        COMPOSE_PROJECT_NAME = 'devops-ci-app'
+        COMPOSE_FILE = 'docker-compose.yml'
+    }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                git branch: 'main', url: 'https://github.com/Hadia2003/docker-mysql-nodejs-reactjs-app.git'
+            }
+        }
+
+        stage('Pre-clean') {
+            steps {
+                sh '''
+                docker-compose -p $COMPOSE_PROJECT_NAME -f $COMPOSE_FILE down --volumes || true
+                docker system prune -af || true
+                docker volume prune -f || true
+                '''
+            }
+        }
+
+        stage('Build Docker Images') {
+            steps {
+                sh 'docker-compose -p $COMPOSE_PROJECT_NAME -f $COMPOSE_FILE build --no-cache'
+            }
+        }
+
+        stage('Deploy Containers') {
+            steps {
+                sh 'docker-compose -p $COMPOSE_PROJECT_NAME -f $COMPOSE_FILE up -d'
+            }
+        }
+    }
+
+    post {
+        always {
+            echo 'Pipeline completed.'
+        }
+    }
+}
