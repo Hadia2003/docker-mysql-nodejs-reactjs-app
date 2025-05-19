@@ -12,10 +12,17 @@ pipeline {
     }
 
     options {
-        retry(2) // Retry the whole pipeline up to 2 times on failure
+        retry(2)
+        skipDefaultCheckout(true)
     }
 
     stages {
+        stage('Cleanup') {
+            steps {
+                deleteDir()
+            }
+        }
+
         stage('Checkout') {
             steps {
                 checkout scm
@@ -24,13 +31,21 @@ pipeline {
 
         stage('Build Backend') {
             steps {
-                sh 'cd backend && npm install'
+                dir('backend') {
+                    sh 'npm cache clean --force'
+                    sh 'rm -rf node_modules package-lock.json'
+                    sh 'npm install --loglevel=warn'
+                }
             }
         }
 
         stage('Build Frontend') {
             steps {
-                sh 'cd frontend && npm install'
+                dir('frontend') {
+                    sh 'npm cache clean --force'
+                    sh 'rm -rf node_modules package-lock.json'
+                    sh 'npm install --loglevel=warn'
+                }
             }
         }
 
