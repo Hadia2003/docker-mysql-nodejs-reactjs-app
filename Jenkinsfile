@@ -5,11 +5,14 @@ pipeline {
             args '-v /var/run/docker.sock:/var/run/docker.sock'
             reuseNode true
         }
-        retries 2  // Retry the whole agent block if Jenkins restarts
     }
 
     environment {
         DOCKER_BUILDKIT = 1
+    }
+
+    options {
+        retry(2) // Retry the whole pipeline up to 2 times on failure
     }
 
     stages {
@@ -40,7 +43,7 @@ pipeline {
 
     post {
         always {
-            sh 'docker compose down'
+            sh 'docker compose down || true'
         }
     }
 }
