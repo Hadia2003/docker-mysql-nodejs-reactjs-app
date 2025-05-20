@@ -11,6 +11,11 @@ services:
       MYSQL_DATABASE: devopsjenkinsdb
     volumes:
       - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   backend:
     container_name: node-jenkins-app
@@ -19,10 +24,9 @@ services:
       dockerfile: Dockerfile
     ports:
       - "3000:3000"
-    volumes:
-      - ./backend:/app
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
   frontend:
     container_name: react-jenkins-app
@@ -31,8 +35,6 @@ services:
       dockerfile: Dockerfile
     ports:
       - "3001:3000"
-    volumes:
-      - ./frontend:/app
     depends_on:
       - backend
 
